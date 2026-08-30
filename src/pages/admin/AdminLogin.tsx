@@ -10,7 +10,7 @@ export const AdminLogin: React.FC = () => {
   const { navigate } = useStore();
   const { showSuccess, showError } = useToast();
 
-  const [email, setEmail] = useState('admin@sntechno.com');
+  const [email, setEmail] = useState('sntechno@gmail.com');
   const [password, setPassword] = useState('admin123');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -104,7 +104,7 @@ export const AdminLogin: React.FC = () => {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="admin@sntechno.com"
+                placeholder="sntechno@gmail.com"
                 className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 text-slate-100 text-sm outline-none transition-all placeholder-slate-500"
               />
             </div>
@@ -157,23 +157,15 @@ export const AdminLogin: React.FC = () => {
 
           {/* Quick Demo Credentials Info for Testing & Safety */}
           <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 space-y-1.5">
-            <span className="font-semibold text-slate-300 block">Credenciais Padrão:</span>
+            <span className="font-semibold text-slate-300 block">Credenciais Administrativas:</span>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 id="quick-fill-admin-btn"
-                onClick={() => handleFillDemo('admin@sntechno.com', 'admin123')}
+                onClick={() => handleFillDemo('sntechno@gmail.com', 'admin123')}
                 className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 font-mono text-[10px] transition-colors"
               >
-                admin@sntechno.com / admin123
-              </button>
-              <button
-                type="button"
-                id="quick-fill-owner-btn"
-                onClick={() => handleFillDemo('vicecityprojeto@gmail.com', 'admin123')}
-                className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-purple-300 font-mono text-[10px] transition-colors"
-              >
-                vicecityprojeto@gmail.com
+                sntechno@gmail.com / admin123
               </button>
             </div>
           </div>

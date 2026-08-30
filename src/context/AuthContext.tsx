@@ -46,8 +46,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const normalizedEmail = email.trim().toLowerCase();
     const adminEmail = admin.email.trim().toLowerCase();
 
-    // Check credentials (allows configured admin email OR project owner email)
-    const isEmailValid = normalizedEmail === adminEmail || normalizedEmail === 'admin@sntechno.com' || normalizedEmail === 'vicecityprojeto@gmail.com';
+    // Check credentials (allows configured admin email OR sntechno@gmail.com)
+    const isEmailValid = normalizedEmail === adminEmail || normalizedEmail === 'sntechno@gmail.com';
     const isPassValid = pass === validPass || (pass === 'admin123' && validPass === 'admin123');
 
     if (!isEmailValid) {

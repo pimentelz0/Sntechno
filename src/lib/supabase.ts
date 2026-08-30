@@ -10,10 +10,13 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // SQL Schema for users to run in Supabase SQL editor if tables do not exist yet
-export const SUPABASE_SQL_SETUP = `-- Script de Configuração Inicial do Supabase para SN TECHNO
--- Execute no SQL Editor do Supabase (https://supabase.com/dashboard/project/_/sql)
+export const SUPABASE_SQL_SETUP = `-- ==========================================================
+-- SCRIPT COMPLETO SUPABASE - SN TECHNO (Catálogo + Admin + Vercel)
+-- Execute no SQL Editor do Supabase:
+-- https://supabase.com/dashboard/project/zatwvmhebirtnfhhwamz/sql
+-- ==========================================================
 
--- 1. Tabela de Categorias
+-- 1. TABELA DE CATEGORIAS
 CREATE TABLE IF NOT EXISTS public.categories (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -26,7 +29,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 2. Tabela de Produtos
+-- 2. TABELA DE PRODUTOS
 CREATE TABLE IF NOT EXISTS public.products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -43,24 +46,26 @@ CREATE TABLE IF NOT EXISTS public.products (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 3. Tabela de Configurações da Loja
+-- 3. TABELA DE CONFIGURAÇÕES DA LOJA
 CREATE TABLE IF NOT EXISTS public.settings (
   id TEXT PRIMARY KEY DEFAULT 'sn_techno_default',
   store_name TEXT NOT NULL DEFAULT 'SN TECHNO',
   tagline TEXT DEFAULT 'Consertos em Celulares • Vendas de Acessórios',
-  whatsapp_number TEXT DEFAULT '5511999999999',
-  presentation_text TEXT,
+  whatsapp_number TEXT DEFAULT '85920094668',
+  presentation_text TEXT DEFAULT '',
   low_stock_threshold INTEGER DEFAULT 5,
   address TEXT DEFAULT 'Atendimento e Retirada na Loja Física • Consulte horários',
   business_hours TEXT DEFAULT 'Segunda a Sexta: 09h às 18h | Sábado: 09h às 13h',
-  instagram_handle TEXT DEFAULT 'sntechno',
-  bible_verse TEXT DEFAULT 'Consagre ao Senhor tudo o que você faz, e os seus planos serão bem-sucedidos.',
-  bible_reference TEXT DEFAULT 'Provérbios 16:3',
+  instagram TEXT DEFAULT 'https://www.instagram.com/sntechno_aracape?igsi=MTh2eXBtN3VqM2Z1bg==',
+  instagram_handle TEXT DEFAULT 'sntechno_aracape',
+  enable_assistance_tab BOOLEAN DEFAULT true,
+  bible_verse TEXT DEFAULT '',
+  bible_reference TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 4. Tabela de Pedidos
+-- 4. TABELA DE PEDIDOS
 CREATE TABLE IF NOT EXISTS public.orders (
   id TEXT PRIMARY KEY,
   customer_name TEXT NOT NULL,
@@ -71,28 +76,79 @@ CREATE TABLE IF NOT EXISTS public.orders (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Habilitar Row Level Security (RLS) e Políticas de Leitura Pública / Escrita com Anon Key
+-- 5. TABELA DE USUÁRIOS ADMIN / ACESSO
+CREATE TABLE IF NOT EXISTS public.admins (
+  id TEXT PRIMARY KEY DEFAULT 'admin-sntechno',
+  email TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  role TEXT DEFAULT 'super_admin',
+  password_hash TEXT,
+  last_login TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ==========================================================
+-- POLÍTICAS DE SEGURANÇA (Row Level Security - RLS)
+-- Permite leitura e gravação segura via Anon Key e Frontend
+-- ==========================================================
+
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Public read categories" ON public.categories;
-CREATE POLICY "Public read categories" ON public.categories FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Public write categories" ON public.categories;
-CREATE POLICY "Public write categories" ON public.categories FOR ALL USING (true);
+DROP POLICY IF EXISTS "Public full access categories" ON public.categories;
+CREATE POLICY "Public full access categories" ON public.categories FOR ALL USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Public read products" ON public.products;
-CREATE POLICY "Public read products" ON public.products FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Public write products" ON public.products FOR ALL USING (true);
+DROP POLICY IF EXISTS "Public full access products" ON public.products;
+CREATE POLICY "Public full access products" ON public.products FOR ALL USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Public read settings" ON public.settings;
-CREATE POLICY "Public read settings" ON public.settings FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Public write settings" ON public.settings FOR ALL USING (true);
+DROP POLICY IF EXISTS "Public full access settings" ON public.settings;
+CREATE POLICY "Public full access settings" ON public.settings FOR ALL USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Public read orders" ON public.orders;
-CREATE POLICY "Public read orders" ON public.orders FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Public write orders" ON public.orders FOR ALL USING (true);
+DROP POLICY IF EXISTS "Public full access orders" ON public.orders;
+CREATE POLICY "Public full access orders" ON public.orders FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public full access admins" ON public.admins;
+CREATE POLICY "Public full access admins" ON public.admins FOR ALL USING (true) WITH CHECK (true);
+
+-- ==========================================================
+-- DADOS INICIAIS (SEED) - Categorias, Configurações e Admin
+-- ==========================================================
+
+-- Inserir Configurações Padrão
+INSERT INTO public.settings (
+  id, store_name, tagline, whatsapp_number, address, business_hours, instagram, instagram_handle, enable_assistance_tab
+) VALUES (
+  'sn_techno_default',
+  'SN TECHNO',
+  'Consertos em Celulares • Vendas de Acessórios',
+  '85920094668',
+  'Atendimento e Retirada na Loja Física • Consulte horários',
+  'Segunda a Sexta: 09h às 18h | Sábado: 09h às 13h',
+  'https://www.instagram.com/sntechno_aracape?igsi=MTh2eXBtN3VqM2Z1bg==',
+  'sntechno_aracape',
+  true
+) ON CONFLICT (id) DO UPDATE SET
+  whatsapp_number = EXCLUDED.whatsapp_number,
+  instagram = EXCLUDED.instagram;
+
+-- Inserir / Atualizar Administrador Inicial
+DELETE FROM public.admins WHERE email = 'vicecityprojeto@gmail.com' OR email = 'admin@sntechno.com';
+INSERT INTO public.admins (id, email, name, role) 
+VALUES ('admin-sntechno', 'sntechno@gmail.com', 'Administrador SN TECHNO', 'super_admin')
+ON CONFLICT (email) DO NOTHING;
+
+-- Inserir Categorias Principais
+INSERT INTO public.categories (id, name, slug, icon_name, "order", active) VALUES
+('cat-capas', 'Capas e Cases', 'capas-e-cases', 'Shield', 1, true),
+('cat-peliculas', 'Películas 3D / Cerâmica', 'peliculas', 'Layers', 2, true),
+('cat-carregadores', 'Carregadores e Fontes Turbo', 'carregadores', 'Zap', 3, true),
+('cat-cabos', 'Cabos e Conectores', 'cabos', 'Cable', 4, true),
+('cat-fones', 'Fones e Áudio Bluetooth', 'fones-audio', 'Headphones', 5, true),
+('cat-suportes', 'Suportes e Acessórios Veiculares', 'suportes', 'Smartphone', 6, true)
+ON CONFLICT (id) DO NOTHING;
 `;
 
 // Helper converters between TS types and DB schemas

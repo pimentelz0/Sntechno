@@ -305,7 +305,7 @@ export const INITIAL_SETTINGS: StoreSettings = {
 
 export const DEFAULT_ADMIN: AdminUser = {
   id: 'admin-001',
-  email: 'admin@sntechno.com',
+  email: 'sntechno@gmail.com',
   name: 'Proprietário SN TECHNO',
   role: 'super_admin',
 };

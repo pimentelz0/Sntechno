@@ -283,7 +283,14 @@ export class StorageService {
     if (!this.isAvailable()) return DEFAULT_ADMIN;
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.ADMIN_USER);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.email === 'vicecityprojeto@gmail.com' || parsed.email === 'admin@sntechno.com') {
+          parsed.email = 'sntechno@gmail.com';
+          localStorage.setItem(STORAGE_KEYS.ADMIN_USER, JSON.stringify(parsed));
+        }
+        return parsed;
+      }
     } catch (e) {
       console.error('Error loading admin user:', e);
     }
