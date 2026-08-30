@@ -10,8 +10,8 @@ export const AdminLogin: React.FC = () => {
   const { navigate } = useStore();
   const { showSuccess, showError } = useToast();
 
-  const [email, setEmail] = useState('sntechno@gmail.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -40,28 +40,18 @@ export const AdminLogin: React.FC = () => {
     setIsLoading(false);
   };
 
-  const handleFillDemo = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-  };
-
   return (
-    <div className="min-h-screen bg-[#070b14] flex flex-col items-center justify-center p-4 sm:p-6 text-slate-100 relative overflow-hidden">
+    <div className="min-h-screen bg-[#070b14] flex flex-col items-center justify-center p-4 sm:p-6 text-slate-100 relative">
       
-      {/* Ambient background glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
-
       <div className="w-full max-w-md relative z-10 space-y-6">
         
         {/* Brand Header */}
         <div className="text-center space-y-3">
-          <div className="relative inline-block">
-            <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-75 blur-xs"></div>
+          <div className="inline-flex p-1 rounded-full bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 shadow-xl shadow-cyan-500/20">
             <img
               src={logoImg}
               alt="SN TECHNO"
-              className="relative w-20 h-20 rounded-full object-cover border-2 border-cyan-400 mx-auto shadow-xl"
+              className="w-20 h-20 rounded-full object-cover border-2 border-[#070b14] mx-auto"
               referrerPolicy="no-referrer"
             />
           </div>
@@ -77,7 +67,7 @@ export const AdminLogin: React.FC = () => {
         </div>
 
         {/* Login Card */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-[#0d1322]/90 border border-slate-800 shadow-2xl shadow-black/60 backdrop-blur-xl space-y-5">
+        <div className="p-6 sm:p-8 rounded-3xl bg-[#0d1322] border border-slate-800 shadow-2xl shadow-black/80 space-y-5">
           
           <div className="flex items-center gap-2 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 text-xs">
             <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -104,7 +94,7 @@ export const AdminLogin: React.FC = () => {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="sntechno@gmail.com"
+                placeholder="seu-email@exemplo.com"
                 className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 text-slate-100 text-sm outline-none transition-all placeholder-slate-500"
               />
             </div>
@@ -155,21 +145,6 @@ export const AdminLogin: React.FC = () => {
             </button>
           </form>
 
-          {/* Quick Demo Credentials Info for Testing & Safety */}
-          <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 space-y-1.5">
-            <span className="font-semibold text-slate-300 block">Credenciais Administrativas:</span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                id="quick-fill-admin-btn"
-                onClick={() => handleFillDemo('sntechno@gmail.com', 'admin123')}
-                className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 font-mono text-[10px] transition-colors"
-              >
-                sntechno@gmail.com / admin123
-              </button>
-            </div>
-          </div>
-
         </div>
 
         {/* Back to Public Store */}
@@ -189,3 +164,4 @@ export const AdminLogin: React.FC = () => {
     </div>
   );
 };
+
