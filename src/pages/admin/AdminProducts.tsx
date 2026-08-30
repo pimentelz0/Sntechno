@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { useToast } from '../../components/common/Toast';
@@ -18,9 +18,47 @@ import {
   EyeOff,
   Sparkles,
   Smartphone,
-  ExternalLink
+  ExternalLink,
+  Upload,
+  Camera,
+  Link as LinkIcon,
+  RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+// Client-side image compression to ensure smooth persistence and instant loading
+const compressImageFile = (file: File, maxWidth = 800, quality = 0.85): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(e.target?.result as string);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 
 export const AdminProducts: React.FC = () => {
   const { 
@@ -59,6 +97,37 @@ export const AdminProducts: React.FC = () => {
   // Delete Confirmation Modal
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
+  // File upload ref & loading state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+
+  // Image Upload handler with compression
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showError('Formato Inválido', 'Por favor, selecione um arquivo de imagem.');
+      return;
+    }
+
+    try {
+      setIsProcessingImage(true);
+      const compressedDataUrl = await compressImageFile(file, 800, 0.85);
+      setFormData(prev => ({ ...prev, image: compressedDataUrl }));
+      showSuccess('Foto Carregada', 'Imagem da galeria adicionada com sucesso.');
+    } catch (err) {
+      showError('Erro ao Processar', 'Não foi possível carregar a imagem selecionada.');
+    } finally {
+      setIsProcessingImage(false);
+      // Reset input value so same file can be re-selected if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   // Filtered List
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -83,11 +152,12 @@ export const AdminProducts: React.FC = () => {
 
   const handleOpenAdd = () => {
     setEditingProduct(null);
+    setShowUrlInput(false);
     setFormData({
       name: '',
       description: '',
       price: '',
-      image: 'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=600',
+      image: '',
       categoryId: categories[0]?.id || '',
       stock: '10',
       active: true,
@@ -99,6 +169,7 @@ export const AdminProducts: React.FC = () => {
 
   const handleOpenEdit = (p: Product) => {
     setEditingProduct(p);
+    setShowUrlInput(false);
     setFormData({
       name: p.name,
       description: p.description,
@@ -500,44 +571,127 @@ export const AdminProducts: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Image URL & Quick Presets */}
+                {/* Product Image Upload (Gallery / Camera / Files) */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
-                    <span>URL da Imagem do Produto</span>
-                    <span className="text-[10px] text-slate-400">Pré-visualização ao vivo</span>
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      id="product-form-image"
-                      type="url"
-                      value={formData.image}
-                      onChange={e => setFormData({ ...formData, image: e.target.value })}
-                      placeholder="https://..."
-                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 text-xs outline-none focus:border-cyan-400"
-                    />
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                    <span>Foto do Produto (Galeria / Câmera)</span>
                     {formData.image && (
-                      <img
-                        src={formData.image}
-                        alt="Preview"
-                        className="w-10 h-10 rounded-lg object-cover bg-slate-950 border border-slate-700"
-                      />
+                      <span className="text-[10px] text-cyan-400 font-medium">Foto selecionada</span>
                     )}
+                  </label>
+
+                  {/* Hidden native file input targeting images from gallery or camera */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                    id="product-image-file-input"
+                  />
+
+                  {formData.image ? (
+                    /* Image preview & action bar */
+                    <div className="p-3 rounded-2xl bg-slate-900 border border-slate-700 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={formData.image}
+                          alt="Prévia do Produto"
+                          className="w-20 h-20 rounded-xl object-cover bg-slate-950 border border-slate-700 shadow-md shrink-0"
+                        />
+                        <div className="flex-1 space-y-1.5 min-w-0">
+                          <p className="text-xs font-medium text-slate-200 truncate">
+                            Imagem pronta para o catálogo
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              id="change-photo-btn"
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={isProcessingImage}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40 transition-colors disabled:opacity-50"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>{isProcessingImage ? 'Processando...' : 'Trocar Foto'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              id="remove-photo-btn"
+                              onClick={() => setFormData({ ...formData, image: '' })}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Remover</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Upload placeholder box */
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`cursor-pointer group flex flex-col items-center justify-center p-5 rounded-2xl border-2 border-dashed transition-all text-center ${
+                        isProcessingImage 
+                          ? 'border-cyan-500 bg-cyan-950/20' 
+                          : 'border-slate-700 hover:border-cyan-400 bg-slate-900/80 hover:bg-slate-900'
+                      }`}
+                    >
+                      <div className="w-12 h-12 rounded-full bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-300 mb-2 group-hover:scale-105 transition-transform shadow-lg shadow-cyan-950/50">
+                        {isProcessingImage ? (
+                          <RefreshCw className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Camera className="w-5 h-5" />
+                        )}
+                      </div>
+                      
+                      <span className="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">
+                        {isProcessingImage ? 'Otimizando imagem...' : 'Escolher Foto da Galeria ou Tirar Foto'}
+                      </span>
+                      <span className="text-[10px] text-slate-400 mt-0.5">
+                        Toque aqui para abrir a galeria do seu celular
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Optional URL Toggle / Presets */}
+                  <div className="mt-2 flex items-center justify-between text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setShowUrlInput(!showUrlInput)}
+                      className="text-slate-400 hover:text-cyan-300 transition-colors inline-flex items-center gap-1"
+                    >
+                      <LinkIcon className="w-3 h-3" />
+                      <span>{showUrlInput ? 'Ocultar campo de link' : 'Ou inserir link da internet'}</span>
+                    </button>
                   </div>
 
-                  {/* Quick Preset Buttons */}
-                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                    <span className="text-[10px] text-slate-500 mr-1">Presets:</span>
-                    {quickImagePresets.map((preset, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, image: preset.url })}
-                        className="px-2 py-0.5 rounded text-[10px] bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-800 transition-colors"
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
+                  {showUrlInput && (
+                    <div className="mt-2 space-y-2 p-3 rounded-xl bg-slate-950 border border-slate-800">
+                      <input
+                        id="product-form-image-url"
+                        type="url"
+                        value={formData.image}
+                        onChange={e => setFormData({ ...formData, image: e.target.value })}
+                        placeholder="Cole a URL da imagem (https://...)"
+                        className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-xs outline-none focus:border-cyan-400"
+                      />
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] text-slate-500">Presets rápidos:</span>
+                        {quickImagePresets.map((preset, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, image: preset.url })}
+                            className="px-2 py-0.5 rounded text-[10px] bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-800 transition-colors"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Description */}
