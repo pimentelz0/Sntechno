@@ -14,6 +14,27 @@ const AppRouter: React.FC = () => {
   const { currentRoute, navigate } = useStore();
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Route guarding and automatic redirection effects
+  React.useEffect(() => {
+    if (isLoading) return;
+
+    if (currentRoute === '/admin') {
+      if (isAuthenticated) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/admin/login');
+      }
+    } else if (currentRoute === '/admin/login') {
+      if (isAuthenticated) {
+        navigate('/admin/dashboard');
+      }
+    } else if (currentRoute.startsWith('/admin')) {
+      if (!isAuthenticated) {
+        navigate('/admin/login');
+      }
+    }
+  }, [currentRoute, isAuthenticated, isLoading, navigate]);
+
   // If loading auth state
   if (isLoading) {
     return (
@@ -27,7 +48,10 @@ const AppRouter: React.FC = () => {
   }
 
   // Admin Login route
-  if (currentRoute === '/admin/login') {
+  if (currentRoute === '/admin/login' || (currentRoute === '/admin' && !isAuthenticated)) {
+    if (isAuthenticated) {
+      return <AdminDashboard />;
+    }
     return <AdminLogin />;
   }
 
