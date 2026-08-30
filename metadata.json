@@ -1,0 +1,6 @@
+{
+  "name": "SN TECHNO - Catálogo Digital & Painel Administrativo",
+  "description": "Catálogo digital profissional e painel de gestão para a SN TECHNO - Consertos em celulares, vendas de acessórios e tecnologia.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
