@@ -22,7 +22,8 @@ import {
   Upload,
   Camera,
   Link as LinkIcon,
-  RefreshCw
+  RefreshCw,
+  Minus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -67,6 +68,7 @@ export const AdminProducts: React.FC = () => {
     addProduct, 
     updateProduct, 
     deleteProduct, 
+    updateStock,
     toggleProductActive,
     settings 
   } = useStore();
@@ -379,18 +381,50 @@ export const AdminProducts: React.FC = () => {
                       {/* Stock */}
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <span className={`font-bold text-xs ${
-                            p.stock === 0
-                              ? 'text-rose-400'
-                              : p.stock <= (settings.lowStockThreshold || 5)
-                              ? 'text-amber-400'
-                              : 'text-emerald-400'
-                          }`}>
-                            {p.stock} un.
-                          </span>
+                          <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+                            <button
+                              type="button"
+                              id={`admin-dec-stock-${p.id}`}
+                              onClick={() => {
+                                const newQty = Math.max(0, p.stock - 1);
+                                updateStock(p.id, newQty);
+                              }}
+                              disabled={p.stock <= 0}
+                              className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              title="Diminuir estoque (-1)"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className={`px-2 font-bold text-xs min-w-[2.5rem] text-center ${
+                              p.stock === 0
+                                ? 'text-rose-400'
+                                : p.stock <= (settings.lowStockThreshold || 5)
+                                ? 'text-amber-400'
+                                : 'text-emerald-400'
+                            }`}>
+                              {p.stock}
+                            </span>
+                            <button
+                              type="button"
+                              id={`admin-inc-stock-${p.id}`}
+                              onClick={() => {
+                                updateStock(p.id, p.stock + 1);
+                              }}
+                              className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                              title="Aumentar estoque (+1)"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+
                           {p.stock <= (settings.lowStockThreshold || 5) && p.stock > 0 && (
                             <span className="text-[10px] text-amber-400 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-800/80 font-semibold">
                               Baixo
+                            </span>
+                          )}
+                          {p.stock === 0 && (
+                            <span className="text-[10px] text-rose-400 bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-800/80 font-semibold">
+                              Esgotado
                             </span>
                           )}
                         </div>
